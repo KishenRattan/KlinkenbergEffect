@@ -5,30 +5,42 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-k = float(input("Enter the initial guess of absolute permeability(md):"))
-pmean = float(input("Enter The mean pressure(psi):"))
-kgas = float(input("Enter the gas perm.(md):"))
+import streamlit as st
 
+st.title("The Klinkenberg Effect")
 
-while abs(6.9*(k**0.64)+pmean*k-pmean*kgas) > 0.0001:
-    k = k - (6.9*(k**0.64)+pmean*k - pmean*kgas)/(4.416*(k**(-0.36))+pmean)
-    
-print("The value of absolute permeability after iteration or gas permeability at infinite pmean is ",k)
+# User inputs (replace input())
+k = st.number_input("Enter the initial guess of absolute permeability (md):", value=1.0)
+pmean = st.number_input("Enter the mean pressure (psi):", value=100.0)
+kgas = st.number_input("Enter the gas permeability (md):", value=1.0)
 
-x = [0,1/pmean]
-y = [k,kgas]
+if st.button("Calculate"):
 
-coefficients = np.polyfit(x,y,1)
-polynomial = np.poly1d(coefficients)
-x_axis = np.linspace(0,0.2,0.01)
-y_axis = polynomial(x_axis)
-plt.plot(x_axis, y_axis)
-plt.plot(x,y)
-plt.xlabel("1/Mean_pressure (psi^-1)")
-plt.ylabel("Measured Gas Permeability(md)")
-plt.title("The Klinkenberg Effect")
-plt.grid(True)
-plt.show()
+    # Iteration
+    while abs(6.9*(k**0.64) + pmean*k - pmean*kgas) > 0.0001:
+        k = k - (6.9*(k**0.64) + pmean*k - pmean*kgas) / (4.416*(k**(-0.36)) + pmean)
 
+    st.success(f"Absolute permeability ≈ {k:.5f} md")
 
-##JC
+    # Plot data
+    x = [0, 1/pmean]
+    y = [k, kgas]
+
+    coefficients = np.polyfit(x, y, 1)
+    polynomial = np.poly1d(coefficients)
+
+    x_axis = np.linspace(0, 0.2, 100)
+    y_axis = polynomial(x_axis)
+
+    fig, ax = plt.subplots()
+    ax.plot(x_axis, y_axis, label="Fitted Line")
+    ax.plot(x, y, 'o', label="Data Points")
+
+    ax.set_xlabel("1 / Mean Pressure (psi⁻¹)")
+    ax.set_ylabel("Measured Gas Permeability (md)")
+    ax.set_title("The Klinkenberg Effect")
+    ax.grid(True)
+    ax.legend()
+
+    # Show plot in Streamlit
+    st.pyplot(fig)
